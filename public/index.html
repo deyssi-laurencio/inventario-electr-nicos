@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Inventario</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+    <div class="container mt-5">
+
+        <h2 class="text-center mb-4">Inventario Electrónicos</h2>
+
+        <div class="card p-3 mb-4">
+            <div class="row">
+                <div class="col"><input id="nombre" class="form-control" placeholder="Nombre"></div>
+                <div class="col"><input id="precio" type="number" class="form-control" placeholder="Precio"></div>
+                <div class="col"><input id="stock" type="number" class="form-control" placeholder="Stock"></div>
+                <div class="col">
+                    <button class="btn btn-primary w-100" onclick="guardar()">Guardar</button>
+                </div>
+            </div>
+        </div>
+
+        <input type="text" id="buscar" class="form-control mb-3" placeholder="Buscar..." onkeyup="filtrar()">
+
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla"></tbody>
+        </table>
+
+    </div>
+
+    <script>
+        let editando = false;
+        let idEditar = null;
+
+        const API = "http://localhost:3000/api/productos";
+
+        async function cargar() {
+            const res = await fetch(API);
+            const data = await res.json();
+
+            const tabla = document.getElementById("tabla");
+            tabla.innerHTML = "";
+
+            data.forEach(p => {
+                tabla.innerHTML += `
+        <tr>
+            <td>${p.id}</td>
+            <td>${p.nombre}</td>
+            <td>${p.precio}</td>
+            <td>${p.stock}</td>
+            <td>
+                <button class="btn btn-warning btn-sm" onclick="editar(${p.id}, '${p.nombre}', ${p.precio}, ${p.stock})">Editar</button>
+                <button class="btn btn-danger btn-sm" onclick="eliminar(${p.id})">Eliminar</button>
+            </td>
+        </tr>`;
+            });
+        }
+
+        async function guardar() {
+            const nombre = document.getElementById("nombre").value;
+            const precio = document.getElementById("precio").value;
+            const stock = document.getElementById("stock").value;
+
+            if (editando) {
+                await fetch(API + "/" + idEditar, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        nombre,
+                        precio,
+                        stock
+                    })
+                });
+                editando = false;
+            } else {
+                await fetch(API, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        nombre,
+                        precio,
+                        stock
+                    })
+                });
+            }
+
+            limpiar();
+            cargar();
+        }
+
+        function editar(id, nombre, precio, stock) {
+            document.getElementById("nombre").value = nombre;
+            document.getElementById("precio").value = precio;
+            document.getElementById("stock").value = stock;
+
+            editando = true;
+            idEditar = id;
+        }
+
+        async function eliminar(id) {
+            await fetch(API + "/" + id, {
+                method: "DELETE"
+            });
+            cargar();
+        }
+
+        function limpiar() {
+            document.getElementById("nombre").value = "";
+            document.getElementById("precio").value = "";
+            document.getElementById("stock").value = "";
+        }
+
+        function filtrar() {
+            let texto = document.getElementById("buscar").value.toLowerCase();
+            let filas = document.querySelectorAll("#tabla tr");
+
+            filas.forEach(fila => {
+                fila.style.display = fila.innerText.toLowerCase().includes(texto) ? "" : "none";
+            });
+        }
+
+        cargar();
+    </script>
+
+</body>
+
+</html>

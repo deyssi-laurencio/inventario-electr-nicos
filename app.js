@@ -4,6 +4,7 @@ const db = require('./config/db');
 const app = express();
 
 app.use(express.json());
+app.use(express.static('public'));
 
 const productosRoutes = require('./routes/productos');
 app.use('/api', productosRoutes);
