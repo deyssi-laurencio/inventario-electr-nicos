@@ -5,6 +5,7 @@ const app = express();
 
 app.use(express.json());
 app.use(express.static('public'));
+app.use('/uploads', express.static('uploads'));
 
 const productosRoutes = require('./routes/productos');
 app.use('/api', productosRoutes);

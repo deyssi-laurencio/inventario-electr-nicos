@@ -2,9 +2,21 @@ const connection = require('../config/db');
 
 // CREAR
 exports.crearProducto = (req, res) => {
-    const producto = req.body;
-    connection.query("INSERT INTO productos SET ?", producto, (err) => {
-        if (err) throw err;
+
+    const producto = {
+        nombre: req.body.nombre,
+        precio: req.body.precio,
+        stock: req.body.stock,
+        imagen: req.file ? req.file.filename : null
+    };
+
+    console.log("FILE RECIBIDO:", req.file); // 🔥 para verificar
+
+    connection.query("INSERT INTO productos SET ?", producto, (err, result) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).send('Error al crear producto');
+        }
         res.send('Producto creado');
     });
 };
@@ -12,34 +24,59 @@ exports.crearProducto = (req, res) => {
 // LISTAR
 exports.listarProductos = (req, res) => {
     connection.query("SELECT * FROM productos", (err, results) => {
-        if (err) throw err;
+        if (err) {
+            console.log(err);
+            return res.status(500).send('Error al listar');
+        }
         res.json(results);
     });
 };
 
 // OBTENER POR ID
 exports.obtenerProductoPorId = (req, res) => {
-    const id = req.params.id;
-    connection.query("SELECT * FROM productos WHERE id = ?", [id], (err, result) => {
-        if (err) throw err;
-        res.json(result[0]);
-    });
+    connection.query(
+        "SELECT * FROM productos WHERE id = ?", [req.params.id],
+        (err, result) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).send('Error');
+            }
+            res.json(result[0]);
+        }
+    );
 };
 
 // ACTUALIZAR
 exports.actualizarProducto = (req, res) => {
-    const id = req.params.id;
-    connection.query("UPDATE productos SET ? WHERE id = ?", [req.body, id], (err) => {
-        if (err) throw err;
-        res.send('Producto actualizado');
-    });
+
+    const producto = {
+        nombre: req.body.nombre,
+        precio: req.body.precio,
+        stock: req.body.stock
+    };
+
+    connection.query(
+        "UPDATE productos SET ? WHERE id = ?", [producto, req.params.id],
+        (err) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).send('Error al actualizar');
+            }
+            res.send('Producto actualizado');
+        }
+    );
 };
 
 // ELIMINAR
 exports.eliminarProducto = (req, res) => {
-    const id = req.params.id;
-    connection.query("DELETE FROM productos WHERE id = ?", [id], (err) => {
-        if (err) throw err;
-        res.send('Producto eliminado');
-    });
+    connection.query(
+        "DELETE FROM productos WHERE id = ?", [req.params.id],
+        (err) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).send('Error');
+            }
+            res.send('Producto eliminado');
+        }
+    );
 };
