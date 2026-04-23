@@ -15,3 +15,6 @@ app.get('/', (req, res) => {
 app.listen(3000, () => {
     console.log('Servidor en http://localhost:3000');
 });
+app.get('/status', (req, res) => {
+    res.send('API funcionando correctamente');
+});
