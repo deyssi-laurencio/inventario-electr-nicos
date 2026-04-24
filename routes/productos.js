@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/productosController');
-
 const multer = require('multer');
 
 // CONFIGURACIÓN DE MULTER
@@ -16,14 +15,17 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// RUTAS
+// RUTAS CRUD
 router.get('/productos', controller.listarProductos);
 
-// 🔥 ESTA LÍNEA ES LA IMPORTANTE
+// Crear producto (con imagen)
 router.post('/productos', upload.single('imagen'), controller.crearProducto);
 
 router.get('/productos/:id', controller.obtenerProductoPorId);
-router.put('/productos/:id', controller.actualizarProducto);
+
+// ACTUALIZAR (Corregido: Ahora permite recibir archivos con upload.single)
+router.put('/productos/:id', upload.single('imagen'), controller.actualizarProducto);
+
 router.delete('/productos/:id', controller.eliminarProducto);
 
 module.exports = router;

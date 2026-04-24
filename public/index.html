@@ -3,145 +3,270 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Inventario</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario de Electrónicos - SENATI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .img-producto {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-form {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        /* Estilo para la imagen dentro del detalle */
+        
+        #detalle-imagen-contenedor img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+    </style>
 </head>
 
 <body class="bg-light">
 
     <div class="container mt-5">
+        <h2 class="text-center mb-4 fw-bold text-primary">Inventario Electrónicos</h2>
 
-        <h2 class="text-center mb-4">Inventario Electrónicos</h2>
-
-        <div class="card p-3 mb-4">
-            <div class="row">
-                <div class="col"><input id="nombre" class="form-control" placeholder="Nombre"></div>
-                <div class="col"><input id="precio" type="number" class="form-control" placeholder="Precio"></div>
-                <div class="col"><input id="stock" type="number" class="form-control" placeholder="Stock"></div>
-                <div class="col"><input type="file" id="imagen" class="form-control"></div>
-                <div class="col">
-                    <button class="btn btn-primary w-100" onclick="guardar()">Guardar</button>
+        <div class="card p-4 mb-4 card-form">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Nombre del Producto</label>
+                    <input id="nombre" class="form-control" placeholder="Ej. Teclado Gamer">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold">Precio</label>
+                    <div class="input-group">
+                        <span class="input-group-text">S/</span>
+                        <input id="precio" type="number" class="form-control" placeholder="0.00" step="0.01">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold">Stock</label>
+                    <input id="stock" type="number" class="form-control" placeholder="0">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Imagen</label>
+                    <input type="file" id="imagen" class="form-control">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button id="btn-guardar" class="btn btn-primary w-100 fw-bold" onclick="guardar()">
+                        Guardar Producto
+                    </button>
                 </div>
             </div>
         </div>
 
-        <input type="text" id="buscar" class="form-control mb-3" placeholder="Buscar..." onkeyup="filtrar()">
+        <div class="mb-3">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search">🔍</i></span>
+                <input type="text" id="buscar" class="form-control border-start-0" placeholder="Buscar por nombre o ID..." onkeyup="filtrar()">
+            </div>
+        </div>
 
-        <table class="table table-striped">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Producto</th>
-                    <th>Precio</th>
-                    <th>Stock</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tabla"></tbody>
-        </table>
-
+        <div class="table-container">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla"></tbody>
+            </table>
+        </div>
     </div>
+
+    <div class="modal fade" id="modalDetalles" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold">Detalle del Producto</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <div id="detalle-imagen-contenedor" class="mb-3"></div>
+                    <h3 id="detalle-nombre" class="fw-bold text-dark"></h3>
+                    <hr>
+                    <div class="row text-start">
+                        <div class="col-6">
+                            <p class="text-muted mb-0 small fw-bold">Precio Unitario</p>
+                            <p id="detalle-precio" class="fs-4 text-success fw-bold"></p>
+                        </div>
+                        <div class="col-6">
+                            <p class="text-muted mb-0 small fw-bold">Stock Actual</p>
+                            <p id="detalle-stock" class="fs-4 text-dark fw-bold"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary w-100 fw-bold" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         let editando = false;
         let idEditar = null;
-
         const API = "http://localhost:3000/api/productos";
 
-        // CARGAR PRODUCTOS
+        // 1. CARGAR PRODUCTOS
         async function cargar() {
-            const res = await fetch(API);
-            const data = await res.json();
+            try {
+                const res = await fetch(API);
+                const data = await res.json();
+                const tabla = document.getElementById("tabla");
+                tabla.innerHTML = "";
 
-            const tabla = document.getElementById("tabla");
-            tabla.innerHTML = "";
+                data.forEach(p => {
+                            tabla.innerHTML += `
+                    <tr>
+                        <td class="ps-4 fw-bold text-secondary">${p.id}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                ${p.imagen 
+                                    ? `<img src="uploads/${p.imagen}" class="img-producto me-3">` 
+                                    : `<div class="img-producto me-3 bg-secondary d-flex align-items-center justify-content-center text-white" style="font-size: 10px;">Sin foto</div>`}
+                                <span class="fw-semibold">${p.nombre}</span>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-success-subtle text-success fs-6">S/ ${parseFloat(p.precio).toFixed(2)}</span></td>
+                        <td>${p.stock} <small class="text-muted">unid.</small></td>
+                        <td class="text-center">
+                            <button class="btn btn-dark btn-sm me-1 fw-bold" onclick="verDetalles(${p.id})">
+                                👁️ Detalles
+                            </button>
+                            <button class="btn btn-warning btn-sm me-1 fw-bold" onclick="editar(${p.id}, '${p.nombre}', ${p.precio}, ${p.stock})">
+                                ✏️ Editar
+                            </button>
+                            <button class="btn btn-danger btn-sm fw-bold" onclick="eliminar(${p.id})">
+                                🗑️ Eliminar
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+            } catch (error) {
+                console.error("Error al cargar productos:", error);
+            }
+        }
 
-            data.forEach(p => {
-                        tabla.innerHTML += `
-        <tr>
-            <td>${p.id}</td>
-            <td>
-                ${p.imagen ? `<img src="uploads/${p.imagen}" width="50"><br>` : ''}
-                ${p.nombre}
-            </td>
-            <td>${p.precio}</td>
-            <td>${p.stock}</td>
-            <td>
-                <button class="btn btn-warning btn-sm" onclick="editar(${p.id}, '${p.nombre}', ${p.precio}, ${p.stock})">Editar</button>
-                <button class="btn btn-danger btn-sm" onclick="eliminar(${p.id})">Eliminar</button>
-            </td>
-        </tr>`;
-    });
-}
+        // 2. GUARDAR (CREATE / UPDATE)
+        async function guardar() {
+            const nombre = document.getElementById("nombre").value;
+            const precio = document.getElementById("precio").value;
+            const stock = document.getElementById("stock").value;
+            const imagen = document.getElementById("imagen").files[0];
 
-// GUARDAR (CREATE / UPDATE)
-async function guardar() {
-    const formData = new FormData();
+            if (!nombre || !precio || !stock) {
+                alert("Por favor, completa los campos principales.");
+                return;
+            }
 
-    formData.append("nombre", document.getElementById("nombre").value);
-    formData.append("precio", document.getElementById("precio").value);
-    formData.append("stock", document.getElementById("stock").value);
+            const formData = new FormData();
+            formData.append("nombre", nombre);
+            formData.append("precio", precio);
+            formData.append("stock", stock);
+            if (imagen) formData.append("imagen", imagen);
 
-    const imagen = document.getElementById("imagen").files[0];
-    if (imagen) {
-        formData.append("imagen", imagen);
-    }
+            const url = editando ? `${API}/${idEditar}` : API;
+            const method = editando ? "PUT" : "POST";
 
-    if (editando) {
-        await fetch(API + "/" + idEditar, {
-            method: "PUT",
-            body: formData
-        });
-        editando = false;
-    } else {
-        await fetch(API, {
-            method: "POST",
-            body: formData
-        });
-    }
+            await fetch(url, { method, body: formData });
 
-    limpiar();
-    cargar();
-}
+            cancelarEdicion();
+            cargar();
+        }
 
-// EDITAR
-function editar(id, nombre, precio, stock){
-    document.getElementById("nombre").value = nombre;
-    document.getElementById("precio").value = precio;
-    document.getElementById("stock").value = stock;
+        // 3. CONFIGURAR EDICIÓN
+        function editar(id, nombre, precio, stock) {
+            document.getElementById("nombre").value = nombre;
+            document.getElementById("precio").value = precio;
+            document.getElementById("stock").value = stock;
+            
+            editando = true;
+            idEditar = id;
+            
+            const btn = document.getElementById("btn-guardar");
+            btn.innerText = "Actualizar Producto";
+            btn.classList.replace("btn-primary", "btn-success");
+        }
 
-    editando = true;
-    idEditar = id;
-}
+        // 4. CANCELAR / LIMPIAR
+        function cancelarEdicion() {
+            document.getElementById("nombre").value = "";
+            document.getElementById("precio").value = "";
+            document.getElementById("stock").value = "";
+            document.getElementById("imagen").value = "";
+            
+            editando = false;
+            idEditar = null;
+            
+            const btn = document.getElementById("btn-guardar");
+            btn.innerText = "Guardar Producto";
+            btn.classList.replace("btn-success", "btn-primary");
+        }
 
-// ELIMINAR
-async function eliminar(id){
-    await fetch(API + "/" + id, { method: "DELETE" });
-    cargar();
-}
+        // 5. ELIMINAR
+        async function eliminar(id) {
+            if (confirm("¿Estás seguro de eliminar este producto?")) {
+                await fetch(`${API}/${id}`, { method: "DELETE" });
+                cargar();
+            }
+        }
 
-// LIMPIAR
-function limpiar(){
-    document.getElementById("nombre").value = "";
-    document.getElementById("precio").value = "";
-    document.getElementById("stock").value = "";
-    document.getElementById("imagen").value = "";
-}
+        // 6. BUSCADOR EN TIEMPO REAL
+        function filtrar() {
+            const texto = document.getElementById("buscar").value.toLowerCase();
+            const filas = document.querySelectorAll("#tabla tr");
+            filas.forEach(fila => {
+                fila.style.display = fila.innerText.toLowerCase().includes(texto) ? "" : "none";
+            });
+        }
 
-// BUSCADOR
-function filtrar(){
-    let texto = document.getElementById("buscar").value.toLowerCase();
-    let filas = document.querySelectorAll("#tabla tr");
+        // 7. VER DETALLES (NUEVO)
+        async function verDetalles(id) {
+            try {
+                const res = await fetch(`${API}/${id}`);
+                const p = await res.json();
 
-    filas.forEach(fila => {
-        fila.style.display = fila.innerText.toLowerCase().includes(texto) ? "" : "none";
-    });
-}
+                document.getElementById("detalle-nombre").innerText = p.nombre;
+                document.getElementById("detalle-precio").innerText = `S/ ${parseFloat(p.precio).toFixed(2)}`;
+                document.getElementById("detalle-stock").innerText = `${p.stock} unidades`;
+                
+                const imgContenedor = document.getElementById("detalle-imagen-contenedor");
+                imgContenedor.innerHTML = p.imagen 
+                    ? `<img src="uploads/${p.imagen}" class="shadow">` 
+                    : `<div class="bg-light p-5 rounded">Sin foto</div>`;
 
-cargar();
+                const modal = new bootstrap.Modal(document.getElementById('modalDetalles'));
+                modal.show();
+            } catch (error) {
+                console.error("Error al obtener detalles:", error);
+            }
+        }
+
+        cargar();
     </script>
-
 </body>
 
 </html>
