@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario de Electrónicos - SENATI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
     <style>
         .img-producto {
             width: 50px;
@@ -27,12 +31,23 @@
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
-        /* Estilo para la imagen dentro del detalle */
         
         #detalle-imagen-contenedor img {
             max-width: 100%;
             height: auto;
             border-radius: 12px;
+        }
+        
+        .btn-pdf {
+            background-color: #e74c3c;
+            color: white;
+            transition: all 0.3s;
+        }
+        
+        .btn-pdf:hover {
+            background-color: #c0392b;
+            color: white;
+            transform: translateY(-2px);
         }
     </style>
 </head>
@@ -71,9 +86,13 @@
             </div>
         </div>
 
-        <div class="mb-3">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search">🔍</i></span>
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <button class="btn btn-pdf fw-bold shadow-sm mb-2" onclick="generarPDF()">
+                📄 Exportar Reporte PDF
+            </button>
+
+            <div class="input-group w-50 mb-2">
+                <span class="input-group-text bg-white border-end-0">🔍</span>
                 <input type="text" id="buscar" class="form-control border-start-0" placeholder="Buscar por nombre o ID..." onkeyup="filtrar()">
             </div>
         </div>
@@ -153,20 +172,14 @@
                         <td><span class="badge bg-success-subtle text-success fs-6">S/ ${parseFloat(p.precio).toFixed(2)}</span></td>
                         <td>${p.stock} <small class="text-muted">unid.</small></td>
                         <td class="text-center">
-                            <button class="btn btn-dark btn-sm me-1 fw-bold" onclick="verDetalles(${p.id})">
-                                👁️ Detalles
-                            </button>
-                            <button class="btn btn-warning btn-sm me-1 fw-bold" onclick="editar(${p.id}, '${p.nombre}', ${p.precio}, ${p.stock})">
-                                ✏️ Editar
-                            </button>
-                            <button class="btn btn-danger btn-sm fw-bold" onclick="eliminar(${p.id})">
-                                🗑️ Eliminar
-                            </button>
+                            <button class="btn btn-dark btn-sm me-1 fw-bold" onclick="verDetalles(${p.id})">👁️</button>
+                            <button class="btn btn-warning btn-sm me-1 fw-bold" onclick="editar(${p.id}, '${p.nombre}', ${p.precio}, ${p.stock})">✏️</button>
+                            <button class="btn btn-danger btn-sm fw-bold" onclick="eliminar(${p.id})">🗑️</button>
                         </td>
                     </tr>`;
                 });
             } catch (error) {
-                console.error("Error al cargar productos:", error);
+                console.error("Error al cargar:", error);
             }
         }
 
@@ -177,10 +190,7 @@
             const stock = document.getElementById("stock").value;
             const imagen = document.getElementById("imagen").files[0];
 
-            if (!nombre || !precio || !stock) {
-                alert("Por favor, completa los campos principales.");
-                return;
-            }
+            if (!nombre || !precio || !stock) return alert("Completa los campos.");
 
             const formData = new FormData();
             formData.append("nombre", nombre);
@@ -192,49 +202,80 @@
             const method = editando ? "PUT" : "POST";
 
             await fetch(url, { method, body: formData });
-
             cancelarEdicion();
             cargar();
         }
 
-        // 3. CONFIGURAR EDICIÓN
+        // 3. GENERAR REPORTE PDF (NUEVO)
+        async function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Encabezado del PDF
+            doc.setFontSize(18);
+            doc.setTextColor(41, 128, 185);
+            doc.text("REPORTE DE INVENTARIO - SENATI", 14, 20);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Fecha de emisión: ${new Date().toLocaleString()}`, 14, 28);
+            doc.text("---------------------------------------------------------------------------------------", 14, 32);
+
+            // Obtener datos actuales
+            const res = await fetch(API);
+            const productos = await res.json();
+
+            // Preparar tabla
+            const columnas = ["ID", "Producto", "Precio (S/)", "Stock"];
+            const filas = productos.map(p => [
+                p.id,
+                p.nombre,
+                parseFloat(p.precio).toFixed(2),
+                p.stock
+            ]);
+
+            doc.autoTable({
+                head: [columnas],
+                body: filas,
+                startY: 35,
+                theme: 'striped',
+                headStyles: { fillColor: [52, 73, 94] },
+                alternateRowStyles: { fillColor: [241, 245, 249] }
+            });
+
+            doc.save("Reporte_Inventario.pdf");
+        }
+
         function editar(id, nombre, precio, stock) {
             document.getElementById("nombre").value = nombre;
             document.getElementById("precio").value = precio;
             document.getElementById("stock").value = stock;
-            
             editando = true;
             idEditar = id;
-            
             const btn = document.getElementById("btn-guardar");
             btn.innerText = "Actualizar Producto";
             btn.classList.replace("btn-primary", "btn-success");
         }
 
-        // 4. CANCELAR / LIMPIAR
         function cancelarEdicion() {
             document.getElementById("nombre").value = "";
             document.getElementById("precio").value = "";
             document.getElementById("stock").value = "";
             document.getElementById("imagen").value = "";
-            
             editando = false;
             idEditar = null;
-            
             const btn = document.getElementById("btn-guardar");
             btn.innerText = "Guardar Producto";
             btn.classList.replace("btn-success", "btn-primary");
         }
 
-        // 5. ELIMINAR
         async function eliminar(id) {
-            if (confirm("¿Estás seguro de eliminar este producto?")) {
+            if (confirm("¿Eliminar este producto?")) {
                 await fetch(`${API}/${id}`, { method: "DELETE" });
                 cargar();
             }
         }
 
-        // 6. BUSCADOR EN TIEMPO REAL
         function filtrar() {
             const texto = document.getElementById("buscar").value.toLowerCase();
             const filas = document.querySelectorAll("#tabla tr");
@@ -243,26 +284,15 @@
             });
         }
 
-        // 7. VER DETALLES (NUEVO)
         async function verDetalles(id) {
-            try {
-                const res = await fetch(`${API}/${id}`);
-                const p = await res.json();
-
-                document.getElementById("detalle-nombre").innerText = p.nombre;
-                document.getElementById("detalle-precio").innerText = `S/ ${parseFloat(p.precio).toFixed(2)}`;
-                document.getElementById("detalle-stock").innerText = `${p.stock} unidades`;
-                
-                const imgContenedor = document.getElementById("detalle-imagen-contenedor");
-                imgContenedor.innerHTML = p.imagen 
-                    ? `<img src="uploads/${p.imagen}" class="shadow">` 
-                    : `<div class="bg-light p-5 rounded">Sin foto</div>`;
-
-                const modal = new bootstrap.Modal(document.getElementById('modalDetalles'));
-                modal.show();
-            } catch (error) {
-                console.error("Error al obtener detalles:", error);
-            }
+            const res = await fetch(`${API}/${id}`);
+            const p = await res.json();
+            document.getElementById("detalle-nombre").innerText = p.nombre;
+            document.getElementById("detalle-precio").innerText = `S/ ${parseFloat(p.precio).toFixed(2)}`;
+            document.getElementById("detalle-stock").innerText = `${p.stock} unidades`;
+            const imgCont = document.getElementById("detalle-imagen-contenedor");
+            imgCont.innerHTML = p.imagen ? `<img src="uploads/${p.imagen}" class="shadow">` : `<div class="p-5 bg-light rounded">Sin foto</div>`;
+            new bootstrap.Modal(document.getElementById('modalDetalles')).show();
         }
 
         cargar();
