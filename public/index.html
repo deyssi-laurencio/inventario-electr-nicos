@@ -31,11 +31,24 @@
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
+        /* Ajustes para el modal compacto y sin scroll */
         
         #detalle-imagen-contenedor img {
+            max-height: 220px;
+            /* Altura limitada para que quepa todo */
+            width: auto;
             max-width: 100%;
-            height: auto;
+            object-fit: contain;
             border-radius: 12px;
+        }
+        
+        .modal-body {
+            padding: 1.25rem !important;
+        }
+        
+        hr {
+            margin: 0.75rem 0;
+            opacity: 0.15;
         }
         
         .btn-pdf {
@@ -114,29 +127,29 @@
     </div>
 
     <div class="modal fade" id="modalDetalles" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title fw-bold">Detalle del Producto</h5>
+                <div class="modal-header bg-dark text-white py-2">
+                    <h6 class="modal-title fw-bold">Vista de Producto</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body text-center p-4">
+                <div class="modal-body text-center">
                     <div id="detalle-imagen-contenedor" class="mb-3"></div>
-                    <h3 id="detalle-nombre" class="fw-bold text-dark"></h3>
+                    <h5 id="detalle-nombre" class="fw-bold text-dark mb-0"></h5>
                     <hr>
-                    <div class="row text-start">
-                        <div class="col-6">
-                            <p class="text-muted mb-0 small fw-bold">Precio Unitario</p>
-                            <p id="detalle-precio" class="fs-4 text-success fw-bold"></p>
+                    <div class="row text-center">
+                        <div class="col-6 border-end">
+                            <p class="text-muted mb-0 small fw-bold">PRECIO</p>
+                            <p id="detalle-precio" class="fs-5 text-success fw-bold mb-0"></p>
                         </div>
                         <div class="col-6">
-                            <p class="text-muted mb-0 small fw-bold">Stock Actual</p>
-                            <p id="detalle-stock" class="fs-4 text-dark fw-bold"></p>
+                            <p class="text-muted mb-0 small fw-bold">STOCK</p>
+                            <p id="detalle-stock" class="fs-5 text-dark fw-bold mb-0"></p>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary w-100 fw-bold" data-bs-dismiss="modal">Cerrar</button>
+                <div class="modal-footer border-0 p-2">
+                    <button type="button" class="btn btn-light w-100 fw-bold border" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -149,7 +162,6 @@
         let idEditar = null;
         const API = "http://localhost:3000/api/productos";
 
-        // 1. CARGAR PRODUCTOS
         async function cargar() {
             try {
                 const res = await fetch(API);
@@ -183,7 +195,6 @@
             }
         }
 
-        // 2. GUARDAR (CREATE / UPDATE)
         async function guardar() {
             const nombre = document.getElementById("nombre").value;
             const precio = document.getElementById("precio").value;
@@ -206,34 +217,20 @@
             cargar();
         }
 
-        // 3. GENERAR REPORTE PDF (NUEVO)
         async function generarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-
-            // Encabezado del PDF
             doc.setFontSize(18);
             doc.setTextColor(41, 128, 185);
             doc.text("REPORTE DE INVENTARIO - SENATI", 14, 20);
-            
             doc.setFontSize(10);
             doc.setTextColor(100);
             doc.text(`Fecha de emisión: ${new Date().toLocaleString()}`, 14, 28);
             doc.text("---------------------------------------------------------------------------------------", 14, 32);
-
-            // Obtener datos actuales
             const res = await fetch(API);
             const productos = await res.json();
-
-            // Preparar tabla
             const columnas = ["ID", "Producto", "Precio (S/)", "Stock"];
-            const filas = productos.map(p => [
-                p.id,
-                p.nombre,
-                parseFloat(p.precio).toFixed(2),
-                p.stock
-            ]);
-
+            const filas = productos.map(p => [p.id, p.nombre, parseFloat(p.precio).toFixed(2), p.stock]);
             doc.autoTable({
                 head: [columnas],
                 body: filas,
@@ -242,7 +239,6 @@
                 headStyles: { fillColor: [52, 73, 94] },
                 alternateRowStyles: { fillColor: [241, 245, 249] }
             });
-
             doc.save("Reporte_Inventario.pdf");
         }
 
@@ -291,7 +287,7 @@
             document.getElementById("detalle-precio").innerText = `S/ ${parseFloat(p.precio).toFixed(2)}`;
             document.getElementById("detalle-stock").innerText = `${p.stock} unidades`;
             const imgCont = document.getElementById("detalle-imagen-contenedor");
-            imgCont.innerHTML = p.imagen ? `<img src="uploads/${p.imagen}" class="shadow">` : `<div class="p-5 bg-light rounded">Sin foto</div>`;
+            imgCont.innerHTML = p.imagen ? `<img src="uploads/${p.imagen}" class="shadow-sm">` : `<div class="p-4 bg-light rounded text-muted">Sin foto</div>`;
             new bootstrap.Modal(document.getElementById('modalDetalles')).show();
         }
 
